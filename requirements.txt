@@ -1,0 +1,10 @@
+scipy
+click
+numpy
+pandas
+pillow
+tqdm
+zarr
+torch
+torchinfo
+torchvision
