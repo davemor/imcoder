@@ -4,6 +4,7 @@ from pathlib import Path
 import click
 import numpy as np
 from scipy.io import savemat
+import zarr
 from tqdm import tqdm
 import multiprocessing as mp
 from pprint import pprint
@@ -24,6 +25,11 @@ def save_features(arr: np.array, path: Path, format: str) -> None:
         np.save(path, arr)
     elif format == "mat":
         savemat(path, {"features": arr, "label": "embeddings"})
+    elif format == "zaar":
+        store = zarr.DirectoryStore(path)
+        root = zarr.open_group(store=store, mode='w')
+        dset = root.create_dataset('features', shape=arr.shape, chunks=arr.shape, dtype=arr.dtype)
+        dset[:] = arr
 
 
 def encode_images(model, preprocess, input_dir: Path, batch_size: int, device: str, num_workers: int) -> np.array:
@@ -42,7 +48,7 @@ def encode_images(model, preprocess, input_dir: Path, batch_size: int, device: s
 @click.option("--dirs", "-d", is_flag=True, help="Expect a directory of directories.")
 @click.option(
     "--format",
-    type=click.Choice(["csv", "npy", "mat"]),
+    type=click.Choice(["csv", "npy", "mat", "zarr"]),
     default="csv",
     help="output format",
 )

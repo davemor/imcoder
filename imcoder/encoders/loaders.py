@@ -11,7 +11,7 @@ class UnlabelledImageFolder(VisionDataset):
     def __init__(self, root: str, transform: Optional[Callable] = None) -> None:
         super().__init__(root, transform=transform, target_transform=None)
         filepaths = [
-            p for p in Path(root).glob("./*") if is_image_file(p.as_posix())
+            p for p in Path(root).rglob("./*") if is_image_file(p.as_posix())
         ]
         self.filepaths = sorted(filepaths, key=lambda p: p.stem)
 
