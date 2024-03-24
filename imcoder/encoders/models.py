@@ -1,3 +1,4 @@
+import os
 from typing import List
 import inspect
 import sys
@@ -8,6 +9,11 @@ import torch.nn.functional as F
 
 from torchvision.models import AlexNet_Weights
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
+
+import timm
+
+# from huggingface_hub import login, hf_hub_download
+
 
 def get_image_net_preprocessor():
     return Compose(
@@ -53,9 +59,35 @@ def load_resnet18_softmax() -> nn.Module:
 
 
 def load_dino2() -> nn.Module:
-    dinov2_vits14 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
+    dinov2_vits14 = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14")
     preprocess = get_image_net_preprocessor()
     return dinov2_vits14, preprocess
+
+
+def load_unidino2() -> nn.Module:
+    # the model is assumed to be on your local drive
+    local_dir = "/scratch/models/vit_large_patch16_224.dinov2.uni_mass100k/"
+    model = timm.create_model(
+        "vit_large_patch16_224",
+        img_size=224,
+        patch_size=16,
+        init_values=1e-5,
+        num_classes=0,
+        dynamic_img_size=True,
+    )
+    model.load_state_dict(
+        torch.load(os.path.join(local_dir, "pytorch_model.bin"), map_location="cpu"),
+        strict=True,
+    )
+    transform = Compose(
+        [
+            Resize(224),
+            ToTensor(),
+            Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+    model.eval()
+    return model, transform
 
 
 def get_loader_names() -> List[str]:

@@ -5,6 +5,8 @@ pandas
 pillow
 tqdm
 zarr
+timm
 torch
 torchinfo
 torchvision
+huggingface_hub
