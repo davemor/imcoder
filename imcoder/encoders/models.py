@@ -58,11 +58,30 @@ def load_resnet18_softmax() -> nn.Module:
     return model, preprocess
 
 
-def load_dino2() -> nn.Module:
+def load_dino2s() -> nn.Module:
     dinov2_vits14 = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14")
     preprocess = get_image_net_preprocessor()
     return dinov2_vits14, preprocess
 
+
+def load_dino2l() -> nn.Module:
+    dinov2_vitl14 = torch.hub.load("facebookresearch/dinov2", "dinov2_vitl14")
+    preprocess = get_image_net_preprocessor()
+    return dinov2_vitl14, preprocess
+
+
+def load_lunitdino():
+    # load model from the hub
+    model = timm.create_model(
+        model_name="hf-hub:1aurent/vit_small_patch16_224.lunit_dino",
+        pretrained=True,
+    ).eval()
+
+    # get model specific transforms (normalization, resize)
+    data_config = timm.data.resolve_model_data_config(model)
+    transforms = timm.data.create_transform(**data_config, is_training=False)
+    model, transforms
+ 
 
 def load_unidino2() -> nn.Module:
     # the model is assumed to be on your local drive

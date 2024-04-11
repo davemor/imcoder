@@ -9,4 +9,3 @@ timm
 torch
 torchinfo
 torchvision
-huggingface_hub

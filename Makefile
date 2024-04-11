@@ -28,14 +28,14 @@ environment:
 image:
 	docker build -t $(DOCKER_IMAGE_NAME) .
 
-run:
+run_eln:
 	docker run --shm-size=64G \
 				--gpus all \
 				--rm \
 				--name $(USER)-$(PROJECT_NAME) \
 				--ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
 				--network=host \
-				-v /home/$(LOCAL_USER)/repos/$(PROJECT_NAME):/workspace/$(PROJECT_NAME) \
+				-v /home/$(LOCAL_USER)/repos/$(PROJECT_NAME):/workspace/repos/$(PROJECT_NAME) \
 				-v /data2:/data \
-				-v /data/scratch:/scratch \
+				-v /nvme:/scratch \
 				-it $(DOCKER_IMAGE_NAME)

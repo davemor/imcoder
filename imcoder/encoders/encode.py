@@ -25,11 +25,13 @@ def save_features(arr: np.array, path: Path, format: str) -> None:
         np.save(path, arr)
     elif format == "mat":
         savemat(path, {"features": arr, "label": "embeddings"})
-    elif format == "zaar":
+    elif format == "zarr":
         store = zarr.DirectoryStore(path)
         root = zarr.open_group(store=store, mode='w')
         dset = root.create_dataset('features', shape=arr.shape, chunks=arr.shape, dtype=arr.dtype)
         dset[:] = arr
+    else:
+        raise ValueError('Unknown array output format.')
 
 
 def encode_images(model, preprocess, input_dir: Path, batch_size: int, device: str, num_workers: int) -> np.array:
@@ -55,6 +57,8 @@ def encode_images(model, preprocess, input_dir: Path, batch_size: int, device: s
 def encode(input_dir, output_path, model_name, batch_size, dirs, format):
     logging.info("Welcome to imcoder.")
 
+    print(input_dir, output_path, model_name, batch_size, dirs, format)
+
     Path(output_path).mkdir(parents=True, exist_ok=True)
 
     # find all the directories to look for images in
@@ -62,7 +66,7 @@ def encode(input_dir, output_path, model_name, batch_size, dirs, format):
         image_dirs = [f for f in Path(input_dir).iterdir() if f.is_dir()]
         image_dirs = sorted(image_dirs, key=lambda p: p.name)
     else:
-        image_dirs = input_dir
+        image_dirs = [Path(input_dir)]
     logging.info(f"Found {len(image_dirs)} image directories.")
 
     # setup the pytorch device
@@ -82,7 +86,6 @@ def encode(input_dir, output_path, model_name, batch_size, dirs, format):
 
     # iterate over the input dirs, encoding and outputting to disk
     for image_dir in image_dirs:
-        logging.info(f"Encoding {image_dir}")
         features = encode_images(model, preprocess, image_dir, batch_size, device, num_workers)
         filepath = Path(output_path, image_dir.stem).with_suffix(f".{format}")
         logging.info(f"Saving embeddings to {filepath}.")

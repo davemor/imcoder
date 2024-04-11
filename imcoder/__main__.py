@@ -22,5 +22,5 @@ cli.add_command(list_models)
 
 
 if __name__ == "__main__":
-    mp.set_start_method("fork")
+    # mp.set_start_method("fork")
     cli(prog_name="imcoder")
