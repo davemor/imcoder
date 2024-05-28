@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import List
 
 import click
 import numpy as np
@@ -18,28 +19,41 @@ from imcoder.encoders.models import get_model
 logging.basicConfig(level=logging.INFO)
 
 
-def save_features(arr: np.array, path: Path, format: str) -> None:
+def save_features(arr: np.array, path: Path, 
+                  format: str, image_filepaths: List[Path] = None) -> None:
     if format == "csv":
         np.savetxt(path, arr, delimiter=",")
+        if image_filepaths:
+            print("Warning - image_filepaths no supported by .csv export format.")               
     elif format == "npy":
         np.save(path, arr)
+        if image_filepaths:
+            print("Warning - image_filepaths no supported by .npy export format.")        
     elif format == "mat":
         savemat(path, {"features": arr, "label": "embeddings"})
+        if image_filepaths:
+            print("Warning - image_filepaths no supported by .mat export format.")
     elif format == "zarr":
         store = zarr.DirectoryStore(path)
         root = zarr.open_group(store=store, mode='w')
         dset = root.create_dataset('features', shape=arr.shape, chunks=arr.shape, dtype=arr.dtype)
         dset[:] = arr
+
+        # add the image paths
+        if image_filepaths:
+            image_filepaths_arr = np.array(image_filepaths, dtype=object)
+            root.create_dataset('filenames', data=image_filepaths_arr, dtype=object, chunks=(arr.shape[0],), overwrite=True)
     else:
         raise ValueError('Unknown array output format.')
 
 
-def encode_images(model, preprocess, input_dir: Path, batch_size: int, device: str, num_workers: int) -> np.array:
+def encode_images(model, preprocess, input_dir: Path, batch_size: 
+                  int, device: str, num_workers: int) -> np.array:
     dataset = UnlabelledImageFolder(input_dir, preprocess)
     loader = DataLoader(dataset, batch_size, num_workers=num_workers)
     with torch.no_grad():
         features = [model(xs.to(device)).detach().cpu().numpy() for xs in tqdm(loader)]
-    return np.concatenate(features)
+    return np.concatenate(features), dataset.filepaths
 
 
 @click.command()
@@ -48,13 +62,14 @@ def encode_images(model, preprocess, input_dir: Path, batch_size: int, device: s
 @click.argument("model_name", type=click.STRING)
 @click.argument("batch_size", type=click.INT, default=64)
 @click.option("--dirs", "-d", is_flag=True, help="Expect a directory of directories.")
+@click.option("--include_filenames", "-f", is_flag=True, help="Add the filenames to the output.")
 @click.option(
     "--format",
     type=click.Choice(["csv", "npy", "mat", "zarr"]),
-    default="csv",
+    default="zarr",
     help="output format",
 )
-def encode(input_dir, output_path, model_name, batch_size, dirs, format):
+def encode(input_dir, output_path, model_name, batch_size, dirs, include_filenames, format):
     logging.info("Welcome to imcoder.")
 
     print(input_dir, output_path, model_name, batch_size, dirs, format)
@@ -86,9 +101,10 @@ def encode(input_dir, output_path, model_name, batch_size, dirs, format):
 
     # iterate over the input dirs, encoding and outputting to disk
     for image_dir in image_dirs:
-        features = encode_images(model, preprocess, image_dir, batch_size, device, num_workers)
+        features, image_filepaths = encode_images(model, preprocess, image_dir, batch_size, device, num_workers)
         filepath = Path(output_path, image_dir.stem).with_suffix(f".{format}")
         logging.info(f"Saving embeddings to {filepath}.")
-        save_features(features, filepath, format)
+        image_filepaths = image_filepaths if include_filenames else None
+        save_features(features, filepath, format, image_filepaths=image_filepaths)
 
     logging.info("Complete.")
