@@ -81,7 +81,7 @@ def load_lunitdino():
     data_config = timm.data.resolve_model_data_config(model)
     transforms = timm.data.create_transform(**data_config, is_training=False)
     model, transforms
- 
+
 
 def load_unidino2() -> nn.Module:
     # the model is assumed to be on your local drive
@@ -124,7 +124,7 @@ def get_loader_names() -> List[str]:
     ]
 
 
-def get_model(model_name: str) -> nn.Module:
+def get_model(model_name: str):
     loader_name = f"load_{model_name}"
     if loader_name not in get_loader_names():
         raise ValueError(f"Model {model_name} not found.")

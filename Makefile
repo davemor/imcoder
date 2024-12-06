@@ -12,9 +12,9 @@ DOCKER_IMAGE_NAME = imcoder
 # LOCAL ENV COMMANDS                                                            #
 #################################################################################
 environment:
-	python -m venv venv
-	. venv/bin/activate &&  pip install -r requirements.txt && pip install -e .
-	echo "Remember to activate the environment before use: . venv/bin/activate"
+	python -m venv .venv
+	. .venv/bin/activate &&  pip install -r requirements.txt && pip install -e .
+	echo "Remember to activate the environment before use: . .venv/bin/activate"
 
 
 #################################################################################

@@ -9,3 +9,4 @@ timm
 torch
 torchinfo
 torchvision
+fastapi[standard]
