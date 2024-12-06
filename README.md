@@ -15,7 +15,7 @@ python imcoder encode --dirs --format=mat INPUT_DIR OUTPUT_PATH dino2 [BATCH_SIZ
 To run the server from the root of the project:
 
 ```bash
-flask --app imcoder.server --debug run`
+flask --app imcoder.server --debug run
 ```
 
 You can then head over to `http://127.0.0.1:5000/static/index.html` to use the Web UI or call the `POST /encode` route.
