@@ -21,3 +21,7 @@ flask --app imcoder.server --debug run`
 You can then head over to `http://127.0.0.1:5000/static/index.html` to use the Web UI or call the `POST /encode` route.
 
 The image should be passes as part of the form data of the request body.
+
+## Screenshots
+
+![Screenshot](./images/screenshot.png)
